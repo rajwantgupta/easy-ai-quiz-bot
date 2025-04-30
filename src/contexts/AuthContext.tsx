@@ -33,6 +33,22 @@ export const useAuth = () => {
   return context;
 };
 
+// Store registered users in localStorage
+const REGISTERED_USERS_KEY = "registered_users";
+
+// Helper to get registered users
+const getRegisteredUsers = (): Record<string, {user: User, password: string}> => {
+  const users = localStorage.getItem(REGISTERED_USERS_KEY);
+  return users ? JSON.parse(users) : {};
+};
+
+// Helper to save registered users
+const saveRegisteredUser = (email: string, userData: {user: User, password: string}) => {
+  const users = getRegisteredUsers();
+  users[email] = userData;
+  localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(users));
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,14 +62,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  // Mock auth functions - to be replaced with real auth later
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Demo admin account
+      // Check demo accounts first
       if (email === "admin@example.com" && password === "password") {
         const userData: User = {
           id: "admin-1",
@@ -69,7 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         toast.success("Logged in as Admin successfully");
         return true;
       } 
-      // Demo candidate account
       else if (email === "user@example.com" && password === "password") {
         const userData: User = {
           id: "user-1",
@@ -84,6 +98,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
+        toast.success("Logged in successfully");
+        return true;
+      } 
+      
+      // Check for registered users
+      const registeredUsers = getRegisteredUsers();
+      const registeredUser = registeredUsers[email];
+      
+      if (registeredUser && registeredUser.password === password) {
+        // Update last login time
+        const updatedUserData = {
+          ...registeredUser.user,
+          lastLogin: new Date().toISOString()
+        };
+        setUser(updatedUserData);
+        localStorage.setItem("user", JSON.stringify(updatedUserData));
+        
+        // Also update in registered users storage
+        registeredUsers[email] = {
+          user: updatedUserData,
+          password: password
+        };
+        localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(registeredUsers));
+        
         toast.success("Logged in successfully");
         return true;
       } else {
@@ -111,13 +149,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Check if the username is already taken (mock check)
-      if (username === "admin" || username === "testuser") {
+      // Check if the email is already taken (demo accounts)
+      if (email === "admin@example.com" || email === "user@example.com") {
+        toast.error("Email already taken");
+        return false;
+      }
+      
+      // Check if username already exists in registered users
+      const registeredUsers = getRegisteredUsers();
+      
+      const usernameTaken = Object.values(registeredUsers).some(
+        ({ user }) => user.username === username
+      );
+      
+      if (username === "admin" || username === "testuser" || usernameTaken) {
         toast.error("Username already taken");
         return false;
       }
       
-      // In a real app, this would actually create a user in the database
+      // Check if email already exists in registered users
+      if (registeredUsers[email]) {
+        toast.error("Email already registered");
+        return false;
+      }
+      
+      // Create new user
       const userData: User = {
         id: `user-${Date.now()}`,
         name,
@@ -129,6 +185,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         createdAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
       };
+      
+      // Save to registered users
+      saveRegisteredUser(email, {
+        user: userData,
+        password: password
+      });
+      
+      // Log the user in
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
       toast.success("Registration successful");
@@ -155,6 +219,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const updatedUser = { ...user, ...data };
       setUser(updatedUser);
       localStorage.setItem("user", JSON.stringify(updatedUser));
+      
+      // If this is a registered user, update their data in the registered users storage
+      const registeredUsers = getRegisteredUsers();
+      if (user.email && registeredUsers[user.email]) {
+        registeredUsers[user.email].user = updatedUser;
+        localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(registeredUsers));
+      }
+      
       toast.success("Profile updated successfully");
       return true;
     } catch (error) {
