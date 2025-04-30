@@ -18,8 +18,11 @@ import Footer from "@/components/Footer";
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [organization, setOrganization] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const { register } = useAuth();
@@ -48,7 +51,7 @@ const Register = () => {
     setIsSubmitting(true);
     
     try {
-      const success = await register(name, email, password);
+      const success = await register(name, email, password, username, phone, organization);
       if (success) {
         navigate("/dashboard");
       }
@@ -67,7 +70,7 @@ const Register = () => {
             <CardHeader className="text-center">
               <CardTitle className="text-2xl">Create an Account</CardTitle>
               <CardDescription>
-                Sign up for AutoAssess & Certify
+                Sign up for EASY AI Quiz
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -84,6 +87,17 @@ const Register = () => {
                 </div>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    placeholder="johndoe"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -93,6 +107,27 @@ const Register = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
                     required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number (Optional)</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="555-123-4567"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="organization">Organization (Optional)</Label>
+                  <Input
+                    id="organization"
+                    placeholder="Your Company or School"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
                   />
                 </div>
                 

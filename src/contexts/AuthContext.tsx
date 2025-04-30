@@ -7,13 +7,19 @@ type User = {
   name: string;
   email: string;
   role: "admin" | "candidate";
+  username?: string;
+  phone?: string;
+  organization?: string;
+  createdAt: string;
+  lastLogin: string;
 };
 
 type AuthContextType = {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, username: string, phone?: string, organization?: string) => Promise<boolean>;
   logout: () => void;
+  updateProfile: (data: Partial<User>) => Promise<boolean>;
   isLoading: boolean;
 };
 
@@ -54,6 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: "Admin User",
           email: "admin@example.com",
           role: "admin",
+          username: "admin",
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
         };
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
@@ -67,6 +76,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           name: "Test Candidate",
           email: "user@example.com",
           role: "candidate",
+          username: "testuser",
+          phone: "555-123-4567",
+          organization: "Test Organization",
+          createdAt: new Date().toISOString(),
+          lastLogin: new Date().toISOString(),
         };
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
@@ -84,18 +98,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  const register = async (
+    name: string, 
+    email: string, 
+    password: string, 
+    username: string, 
+    phone?: string, 
+    organization?: string
+  ): Promise<boolean> => {
     setIsLoading(true);
     try {
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if the username is already taken (mock check)
+      if (username === "admin" || username === "testuser") {
+        toast.error("Username already taken");
+        return false;
+      }
       
       // In a real app, this would actually create a user in the database
       const userData: User = {
         id: `user-${Date.now()}`,
         name,
         email,
+        username,
+        phone,
+        organization,
         role: "candidate", // New users are candidates by default
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
       };
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
@@ -109,6 +141,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = async (data: Partial<User>): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (!user) {
+        toast.error("You must be logged in to update your profile");
+        return false;
+      }
+      
+      const updatedUser = { ...user, ...data };
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      toast.success("Profile updated successfully");
+      return true;
+    } catch (error) {
+      toast.error("Failed to update profile");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("user");
     setUser(null);
@@ -116,7 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, updateProfile, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

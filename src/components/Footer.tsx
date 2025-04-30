@@ -17,10 +17,10 @@ const Footer = () => {
         <div className="flex flex-col items-center md:flex-row md:justify-between">
           <div className="text-center md:text-left mb-4 md:mb-0">
             <button onClick={() => handleNavigation("/")} className="text-lg font-bold text-primary">
-              AutoAssess & Certify
+              EASY AI Quiz
             </button>
             <p className="mt-2 text-sm text-gray-500">
-              Automated document assessment and certification platform
+              AI-powered quiz generation and certification platform
             </p>
           </div>
           <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-6 text-sm">
@@ -36,7 +36,7 @@ const Footer = () => {
           </div>
         </div>
         <div className="mt-8 text-center text-xs text-gray-400">
-          <p>&copy; {currentYear} AutoAssess & Certify. All rights reserved.</p>
+          <p>&copy; {currentYear} EASY AI Quiz. All rights reserved.</p>
         </div>
       </div>
     </footer>

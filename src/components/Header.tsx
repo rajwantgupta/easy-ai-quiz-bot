@@ -16,7 +16,7 @@ const Header = () => {
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-primary">AutoAssess & Certify</span>
+              <span className="text-xl font-bold text-primary">EASY AI Quiz</span>
             </Link>
           </div>
           
@@ -32,6 +32,12 @@ const Header = () => {
                   className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Dashboard
+                </Link>
+                <Link
+                  to="/profile"
+                  className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  My Profile
                 </Link>
                 <div className="flex items-center space-x-2">
                   <User size={16} className="text-gray-600" />
@@ -93,6 +99,13 @@ const Header = () => {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Dashboard
+              </Link>
+              <Link
+                to="/profile"
+                className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-100"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                My Profile
               </Link>
               <div className="px-3 py-2 font-medium text-gray-700">
                 <div className="flex items-center space-x-2">
