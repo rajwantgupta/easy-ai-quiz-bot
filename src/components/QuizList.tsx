@@ -3,6 +3,15 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Share2 } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
+import { ShareCertificate } from "./ShareCertificate";
 
 export type Quiz = {
   id: string;
@@ -18,9 +27,10 @@ export type Quiz = {
 type QuizListProps = {
   quizzes: Quiz[];
   userRole: "admin" | "candidate";
+  userId?: string;
 };
 
-const QuizList = ({ quizzes, userRole }: QuizListProps) => {
+const QuizList = ({ quizzes, userRole, userId }: QuizListProps) => {
   if (quizzes.length === 0) {
     return (
       <div className="text-center p-8">
@@ -33,9 +43,27 @@ const QuizList = ({ quizzes, userRole }: QuizListProps) => {
     );
   }
 
+  // Filter quizzes based on assignments if the user is a candidate
+  const availableQuizzes = userRole === "candidate" && userId ? 
+    quizzes.filter(quiz => {
+      const assignments = JSON.parse(localStorage.getItem("quizAssignments") || "{}");
+      const userAssignments = assignments[userId] || [];
+      return userAssignments.includes(quiz.id);
+    }) : quizzes;
+
+  if (userRole === "candidate" && availableQuizzes.length === 0) {
+    return (
+      <div className="text-center p-8">
+        <p className="text-gray-500">
+          No quizzes have been assigned to you yet.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {quizzes.map((quiz) => (
+      {availableQuizzes.map((quiz) => (
         <Card key={quiz.id} className="overflow-hidden">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-start">
@@ -64,11 +92,27 @@ const QuizList = ({ quizzes, userRole }: QuizListProps) => {
                 </div>
                 
                 {quiz.passed && (
-                  <Link to={`/certificate/${quiz.id}`}>
-                    <Button variant="outline" className="w-full">
-                      View Certificate
-                    </Button>
-                  </Link>
+                  <div className="flex gap-2">
+                    <Link to={`/certificate/${quiz.id}`} className="flex-1">
+                      <Button variant="outline" className="w-full">
+                        View Certificate
+                      </Button>
+                    </Link>
+                    
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="secondary" className="px-3">
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Share Certificate</DialogTitle>
+                        </DialogHeader>
+                        <ShareCertificate quizId={quiz.id} />
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 )}
                 
                 <Link to={`/quiz/${quiz.id}`}>

@@ -17,6 +17,7 @@ import Certificate from "./pages/Certificate";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
+import SupportChat from "./components/SupportChat";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -88,6 +89,10 @@ const App = () => {
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            
+            <ProtectedRoute>
+              <SupportChat />
+            </ProtectedRoute>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

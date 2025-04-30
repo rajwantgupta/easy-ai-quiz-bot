@@ -8,8 +8,16 @@ import { Button } from "@/components/ui/button";
 import QuizList, { Quiz } from "@/components/QuizList";
 import DocumentUploader from "@/components/DocumentUploader";
 import { Upload, Users } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardDescription 
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CandidateManagement from "@/components/CandidateManagement";
+import { toast } from "sonner";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -56,6 +64,56 @@ const AdminDashboard = () => {
     // In a real application, we'd store this in a state management system
     // or backend. For this demo, we'll use localStorage
     localStorage.setItem("generatedQuestions", JSON.stringify(questions));
+  };
+
+  // Handle quiz allocation
+  const handleQuizAllocation = (candidateId: string, quizId: string) => {
+    try {
+      // Get candidate assignments
+      const assignments = JSON.parse(localStorage.getItem("quizAssignments") || "{}");
+      
+      // Assign quiz to candidate
+      if (!assignments[candidateId]) {
+        assignments[candidateId] = [];
+      }
+      
+      // Check if quiz is already assigned
+      if (!assignments[candidateId].includes(quizId)) {
+        assignments[candidateId].push(quizId);
+        localStorage.setItem("quizAssignments", JSON.stringify(assignments));
+        toast.success("Quiz assigned successfully");
+      } else {
+        toast.info("Quiz already assigned to this candidate");
+      }
+    } catch (error) {
+      console.error("Error assigning quiz:", error);
+      toast.error("Failed to assign quiz");
+    }
+  };
+
+  // Handle quiz revocation
+  const handleQuizRevocation = (candidateId: string, quizId: string) => {
+    try {
+      // Get candidate assignments
+      const assignments = JSON.parse(localStorage.getItem("quizAssignments") || "{}");
+      
+      // Check if candidate has any assignments
+      if (!assignments[candidateId]) {
+        toast.error("No quizzes assigned to this candidate");
+        return;
+      }
+      
+      // Filter out the quiz to revoke
+      assignments[candidateId] = assignments[candidateId].filter(
+        (id: string) => id !== quizId
+      );
+      
+      localStorage.setItem("quizAssignments", JSON.stringify(assignments));
+      toast.success("Quiz access revoked successfully");
+    } catch (error) {
+      console.error("Error revoking quiz access:", error);
+      toast.error("Failed to revoke quiz access");
+    }
   };
 
   if (!user || loading) {
@@ -152,24 +210,11 @@ const AdminDashboard = () => {
             <TabsContent value="candidates">
               <h2 className="text-xl font-semibold mb-4">Candidate Management</h2>
               
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Users className="h-5 w-5 mr-2" />
-                    Registered Candidates
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-10">
-                    <p className="text-gray-500 mb-4">
-                      Candidate management functionality will be available in a future update.
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      You'll be able to view detailed candidate stats, manually register candidates, and manage permissions.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+              <CandidateManagement 
+                quizzes={quizzes} 
+                onAssignQuiz={handleQuizAllocation} 
+                onRevokeQuiz={handleQuizRevocation}
+              />
             </TabsContent>
           </Tabs>
         </div>
