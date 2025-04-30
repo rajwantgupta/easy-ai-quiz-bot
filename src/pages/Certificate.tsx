@@ -124,6 +124,11 @@ const Certificate = () => {
     });
   };
 
+  const getMonthName = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'long' });
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -155,67 +160,87 @@ const Certificate = () => {
             <Card className="p-0 overflow-hidden">
               <div 
                 ref={certificateRef} 
-                className="certificate bg-white p-8 sm:p-12 relative flex flex-col items-center text-center"
+                className="certificate p-0 relative flex flex-col items-center text-center bg-white"
+                style={{ aspectRatio: '1.414/1' }} 
               >
-                <div className="absolute top-6 left-6 opacity-30">
-                  <Award className="h-24 w-24 text-primary" />
-                </div>
-                <div className="absolute bottom-6 right-6 opacity-30">
-                  <Award className="h-24 w-24 text-primary" />
-                </div>
+                {/* Red corners */}
+                <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-red-600"></div>
+                <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-red-600"></div>
                 
-                <div className="text-primary font-bold text-2xl sm:text-4xl mb-4">
-                  Certificate of Achievement
-                </div>
+                {/* White background overlay */}
+                <div className="absolute top-[20px] left-[20px] right-[20px] bottom-[20px] bg-white z-10"></div>
                 
-                <div className="text-lg text-gray-600 mb-6">
-                  This certifies that
-                </div>
-                
-                <div className="text-xl sm:text-3xl font-semibold mb-6">
-                  {user.name}
-                </div>
-                
-                <div className="text-lg text-gray-600 mb-6 max-w-lg">
-                  has successfully completed the assessment for
-                </div>
-                
-                <div className="text-xl sm:text-2xl font-semibold text-gray-800 mb-2">
-                  {quizData.title}
-                </div>
-                
-                <div className="mb-6 text-gray-500">
-                  {quizData.description}
-                </div>
-                
-                <div className="bg-primary/10 rounded-md px-6 py-3 mb-8">
-                  <div className="text-primary font-semibold">
-                    Achievement Score: {resultData.score}%
-                  </div>
-                </div>
-                
-                <div className="text-gray-600 mb-6">
-                  Awarded on {formatDate(resultData.completedAt)}
-                </div>
-                
-                <div className="flex justify-between w-full max-w-md">
-                  <div className="text-center">
-                    <div className="w-32 h-12 border-b border-gray-400 mb-2"></div>
-                    <div className="text-gray-600 text-sm">Candidate Signature</div>
+                {/* Certificate content */}
+                <div className="absolute top-[20px] left-[20px] right-[20px] bottom-[20px] flex flex-col items-center p-8 z-20">
+                  
+                  {/* Logo at top right */}
+                  <div className="absolute top-4 right-4 text-red-600 font-bold">
+                    <div className="text-3xl md:text-4xl">easy</div>
+                    <div className="text-xs text-gray-500">EASY AI Quiz</div>
                   </div>
                   
-                  <div className="text-center">
-                    <div className="w-32 h-12 border-b border-gray-400 mb-2 flex items-end justify-center">
-                      <span className="font-script text-gray-700">
-                        AutoAssess
-                      </span>
+                  {/* Award ribbon on left */}
+                  <div className="absolute top-20 left-6">
+                    <div className="relative">
+                      <div className="w-20 h-20 rounded-full bg-yellow-300 border-4 border-yellow-500 flex items-center justify-center shadow-md">
+                        <div className="w-16 h-16 rounded-full bg-yellow-200 border-2 border-yellow-400"></div>
+                      </div>
+                      <div className="absolute bottom-[-30px] left-[5px] w-5 h-16 bg-yellow-400 transform rotate-[15deg]"></div>
+                      <div className="absolute bottom-[-30px] left-[10px] w-5 h-16 bg-yellow-500 transform rotate-[5deg]"></div>
+                      <div className="absolute bottom-[-30px] right-[5px] w-5 h-16 bg-yellow-400 transform rotate-[-15deg]"></div>
+                      <div className="absolute bottom-[-30px] right-[10px] w-5 h-16 bg-yellow-500 transform rotate-[-5deg]"></div>
                     </div>
-                    <div className="text-gray-600 text-sm">Issuer Signature</div>
                   </div>
-                </div>
-                
-                <div className="mt-12 text-xs text-gray-400">
-                  Certificate ID: CERT-{id?.substring(0, 8).toUpperCase()}
+                  
+                  {/* Main certificate title */}
+                  <div className="mt-12 mb-2 w-full">
+                    <h1 className="text-4xl md:text-6xl font-bold text-gray-800">CERTIFICATE</h1>
+                    <h2 className="text-xl md:text-2xl text-gray-600 mt-1">OF APPRECIATION</h2>
+                  </div>
+                  
+                  {/* Recipient info */}
+                  <div className="my-8 w-full">
+                    <p className="text-gray-600 mb-2">PROUDLY PRESENTED TO</p>
+                    <div className="border-b-2 border-gray-300 max-w-md mx-auto">
+                      <h2 className="text-3xl md:text-4xl font-semibold text-gray-700 py-2">
+                        {user.name}
+                      </h2>
+                    </div>
+                  </div>
+                  
+                  {/* Recognition text */}
+                  <div className="mb-4 max-w-lg mx-auto">
+                    <p className="text-gray-600">
+                      In recognition and appreciation of the successful completion
+                      of the {quizData.title} quiz in {getMonthName(resultData.completedAt)}
+                    </p>
+                  </div>
+                  
+                  {/* Star statement */}
+                  <div className="mb-8 mt-4">
+                    <h2 className="text-3xl md:text-4xl font-bold">
+                      YOU ARE <span className="text-red-600">A STAR</span>
+                    </h2>
+                  </div>
+                  
+                  {/* Signature */}
+                  <div className="mt-4 max-w-xs mx-auto">
+                    <div className="w-40 mx-auto mb-1 border-b border-gray-400">
+                      <p className="italic text-gray-600">Signed</p>
+                    </div>
+                    <p className="font-semibold">Dr. Alex Johnson</p>
+                    <p className="text-xs text-gray-600">Managing Director</p>
+                  </div>
+                  
+                  {/* Certificate ID */}
+                  <div className="absolute bottom-2 left-2 text-xs text-gray-400">
+                    Certificate ID: CERT-{id?.substring(0, 8).toUpperCase()}
+                  </div>
+                  
+                  {/* Date */}
+                  <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+                    Date: {formatDate(resultData.completedAt)}
+                  </div>
                 </div>
               </div>
             </Card>
