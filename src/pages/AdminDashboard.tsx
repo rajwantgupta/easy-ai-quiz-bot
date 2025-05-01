@@ -18,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CandidateManagement from "@/components/CandidateManagement";
 import { toast } from "sonner";
+import SopToQuiz from "@/components/SopToQuiz";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -163,6 +164,7 @@ const AdminDashboard = () => {
           <Tabs defaultValue="create" className="space-y-6">
             <TabsList>
               <TabsTrigger value="create">Create Quiz</TabsTrigger>
+              <TabsTrigger value="sop">SOP to Quiz</TabsTrigger>
               <TabsTrigger value="manage">Manage Quizzes</TabsTrigger>
               <TabsTrigger value="candidates">Candidates</TabsTrigger>
             </TabsList>
@@ -179,6 +181,17 @@ const AdminDashboard = () => {
                   isProcessing={isProcessingDocument}
                   setIsProcessing={setIsProcessingDocument}
                 />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="sop">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold mb-2">SOP to Quiz Workflow</h2>
+                <p className="text-gray-600 mb-4">
+                  Follow the step-by-step process to convert SOPs into quizzes.
+                </p>
+                
+                <SopToQuiz />
               </div>
             </TabsContent>
             
