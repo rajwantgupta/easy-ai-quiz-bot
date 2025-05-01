@@ -137,7 +137,7 @@ const SopToQuiz = () => {
         <TabsContent value="step7">
           <Step7Certificates 
             savedQuizId={savedQuizId} 
-            onViewResults={handleViewCertificates} 
+            onViewCertificates={handleViewCertificates} 
           />
         </TabsContent>
       </Tabs>
