@@ -56,7 +56,8 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
-        }
+        },
+        "easy-red": "#EF3F3E" // Add a direct reference to the EASY logo red color
       },
       borderRadius: {
         lg: 'var(--radius)',

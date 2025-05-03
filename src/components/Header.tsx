@@ -16,7 +16,11 @@ const Header = () => {
         <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-primary">EASY AI Quiz</span>
+              <img 
+                src="/lovable-uploads/a55932aa-2102-460d-a387-c1dea2d21d2e.png" 
+                alt="EASY AI Quiz Logo" 
+                className="h-8 w-auto"
+              />
             </Link>
           </div>
           
