@@ -228,7 +228,7 @@ const Certificate = () => {
                     <div className="w-40 mx-auto mb-1 border-b border-gray-400">
                       <p className="italic text-gray-600">Signed</p>
                     </div>
-                    <p className="font-semibold">Dr. Alex Johnson</p>
+                    <p className="font-semibold">Rohit Chokhani</p>
                     <p className="text-xs text-gray-600">Managing Director</p>
                   </div>
                   
