@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +18,44 @@ const SopToQuiz = () => {
   const [sopText, setSopText] = useState<string>("");
   const [questions, setQuestions] = useState<any[]>([]);
   const [savedQuizId, setSavedQuizId] = useState<string | null>(null);
+  const [sopTitle, setSopTitle] = useState<string>(""); 
+
+  // Check for any previously saved work
+  useEffect(() => {
+    const savedSopText = localStorage.getItem("sopText");
+    const savedQuestions = localStorage.getItem("sopQuestions");
+    const savedTitle = localStorage.getItem("currentSopTitle");
+    
+    if (savedTitle) {
+      setSopTitle(savedTitle);
+    }
+    
+    if (savedSopText) {
+      setSopText(savedSopText);
+    }
+    
+    if (savedQuestions) {
+      try {
+        const parsedQuestions = JSON.parse(savedQuestions);
+        if (Array.isArray(parsedQuestions) && parsedQuestions.length > 0) {
+          setQuestions(parsedQuestions);
+        }
+      } catch (error) {
+        console.error("Error parsing saved questions:", error);
+      }
+    }
+  }, []);
+
+  // Save work in progress
+  useEffect(() => {
+    if (sopText) {
+      localStorage.setItem("sopText", sopText);
+    }
+    
+    if (questions.length > 0) {
+      localStorage.setItem("sopQuestions", JSON.stringify(questions));
+    }
+  }, [sopText, questions]);
 
   const handleTextExtracted = (text: string) => {
     setSopText(text);
@@ -41,7 +79,7 @@ const SopToQuiz = () => {
       savedQuizzes.push({
         id: quizId,
         title: quizTitle,
-        description: `Generated from SOP document on ${new Date().toLocaleDateString()}`,
+        description: `Generated from ${sopTitle || "SOP"} document on ${new Date().toLocaleDateString()}`,
         questions: quizQuestions,
         passingScore: 80,
         createdAt: new Date().toISOString(),
@@ -72,8 +110,33 @@ const SopToQuiz = () => {
     toast.success("Navigating to admin dashboard...");
   };
 
+  // Reset the workflow
+  const resetWorkflow = () => {
+    if (window.confirm("Are you sure you want to start over? All unsaved progress will be lost.")) {
+      setSopText("");
+      setQuestions([]);
+      setSavedQuizId(null);
+      localStorage.removeItem("sopText");
+      localStorage.removeItem("sopQuestions");
+      localStorage.removeItem("currentSopTitle");
+      setActiveTab("step1");
+      toast.info("Workflow reset. Starting over.");
+    }
+  };
+
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">SOP to Quiz Conversion</h2>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={resetWorkflow}
+        >
+          Reset Workflow
+        </Button>
+      </div>
+      
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="overflow-x-auto pb-2">
           <TabsList className="w-full md:w-auto">

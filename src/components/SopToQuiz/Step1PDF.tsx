@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { extractTextFromPdf } from "@/utils/pdfUtils";
 import { toast } from "sonner";
-import { FileText, Upload, Check, X } from "lucide-react";
+import { FileText, Upload, Check, X, FileDigit } from "lucide-react";
 
 interface Step1PDFProps {
   onTextExtracted: (text: string) => void;
@@ -15,7 +15,8 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [extractedText, setExtractedText] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-
+  const [sopTitle, setSopTitle] = useState<string>("Leave Policy");
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
@@ -33,6 +34,11 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
       
       setFile(selectedFile);
       setExtractedText(null);
+      
+      // Try to extract a title from the filename
+      const fileName = selectedFile.name.replace(".pdf", "");
+      setSopTitle(fileName.charAt(0).toUpperCase() + fileName.slice(1));
+      
       toast.success(`File "${selectedFile.name}" selected successfully`);
     }
   };
@@ -57,6 +63,11 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
       
       setFile(droppedFile);
       setExtractedText(null);
+      
+      // Try to extract a title from the filename
+      const fileName = droppedFile.name.replace(".pdf", "");
+      setSopTitle(fileName.charAt(0).toUpperCase() + fileName.slice(1));
+      
       toast.success(`File "${droppedFile.name}" dropped successfully`);
     }
   };
@@ -83,14 +94,49 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
     
     try {
       const text = await extractTextFromPdf(file);
+      
+      // If text extraction fails or returns very little text, show error
+      if (!text || text.length < 50) {
+        throw new Error("Could not extract meaningful text from PDF.");
+      }
+      
+      // Try to extract a better title from first line of content
+      const firstLine = text.split('\n')[0];
+      if (firstLine && firstLine.length > 3 && firstLine.length < 50) {
+        setSopTitle(firstLine.trim());
+      }
+      
       setExtractedText(text);
       onTextExtracted(text);
       toast.success("Text extracted successfully from PDF!");
+      
+      // Save the SOP title to localStorage
+      localStorage.setItem("currentSopTitle", sopTitle);
+      
     } catch (error) {
       toast.error("Failed to extract text from PDF. Please try again.");
       console.error("Processing error:", error);
+      
+      // Fallback option - manual input
+      const manualInput = window.confirm("PDF extraction failed. Would you like to input the text manually?");
+      if (manualInput) {
+        setExtractedText("");
+      }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleManualTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setExtractedText(e.target.value);
+  };
+
+  const handleManualTextSubmit = () => {
+    if (extractedText && extractedText.length > 50) {
+      onTextExtracted(extractedText);
+      toast.success("Text submitted successfully!");
+    } else {
+      toast.error("Please enter at least 50 characters of text");
     }
   };
 
@@ -100,6 +146,11 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
     navigator.clipboard.writeText(extractedText)
       .then(() => toast.success("Text copied to clipboard!"))
       .catch(() => toast.error("Failed to copy text"));
+  };
+
+  // Function to open PDF2GO in a new tab
+  const openPDF2GO = () => {
+    window.open("https://www.pdf2go.com/pdf-to-text", "_blank");
   };
 
   return (
@@ -154,7 +205,7 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
           </div>
         )}
         
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             onClick={processDocument}
             disabled={!file || isLoading}
@@ -173,26 +224,64 @@ const Step1PDF = ({ onTextExtracted }: Step1PDFProps) => {
             )}
           </Button>
           
-          {extractedText && (
-            <Button 
-              variant="outline"
-              onClick={copyToClipboard}
-              className="flex-1"
-            >
-              Copy Text to Clipboard
-            </Button>
-          )}
+          <Button 
+            variant="outline"
+            onClick={openPDF2GO}
+            className="flex-1"
+          >
+            <FileDigit className="mr-2 h-4 w-4" />
+            Open PDF2GO Tool
+          </Button>
         </div>
         
-        {extractedText && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium">SOP Title:</label>
+          <input 
+            type="text" 
+            value={sopTitle}
+            onChange={(e) => setSopTitle(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md"
+            placeholder="Enter SOP title"
+          />
+        </div>
+        
+        {extractedText !== null && (
           <div className="mt-4">
-            <div className="font-medium text-sm mb-2 flex items-center">
-              <Check className="h-4 w-4 text-green-500 mr-2" />
-              Text Extracted Successfully
+            <div className="font-medium text-sm mb-2 flex items-center justify-between">
+              <div className="flex items-center">
+                <Check className="h-4 w-4 text-green-500 mr-2" />
+                Text Extracted {extractedText ? "Successfully" : "Failed - Enter Manually"}
+              </div>
+              {extractedText && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={copyToClipboard}
+                >
+                  Copy Text
+                </Button>
+              )}
             </div>
             <div className="bg-gray-50 border rounded-md p-3 h-60 overflow-auto">
-              <pre className="text-xs text-gray-700 whitespace-pre-wrap">{extractedText}</pre>
+              {extractedText !== "" ? (
+                <pre className="text-xs text-gray-700 whitespace-pre-wrap">{extractedText}</pre>
+              ) : (
+                <textarea
+                  className="w-full h-full p-2 text-xs border rounded-md"
+                  placeholder="PDF extraction failed. Paste your SOP text here manually..."
+                  onChange={handleManualTextChange}
+                />
+              )}
             </div>
+            
+            {extractedText === "" && (
+              <Button 
+                className="mt-2 w-full"
+                onClick={handleManualTextSubmit}
+              >
+                Submit Manual Text
+              </Button>
+            )}
           </div>
         )}
       </CardContent>

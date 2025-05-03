@@ -14,66 +14,77 @@ interface Step2GenerateProps {
 const Step2Generate = ({ sopText, onQuestionsGenerated }: Step2GenerateProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedQuestions, setGeneratedQuestions] = useState<string | null>(null);
-  const [prompt, setPrompt] = useState<string>(
-    `You are a quiz generator assistant for corporate training.
+  const [apiKey, setApiKey] = useState<string>("");
+  const [showApiInput, setShowApiInput] = useState(false);
+  const [prompt, setPrompt] = useState<string>(() => {
+    // Create a dynamic prompt based on the SOP text
+    return `You are a quiz generator assistant for corporate training.
 
 Based on the following internal policy document, create 5 multiple-choice questions (MCQs) with 4 options each (A–D) and clearly mark the correct answer.
 
 Keep the language simple and professional. Focus on key information relevant to employees.
 
 Here is the policy text:
-${sopText.substring(0, 500)}...`
-  );
+${sopText.substring(0, 3000)}${sopText.length > 3000 ? '...' : ''}`;
+  });
 
-  const handleGenerateQuestions = async () => {
-    if (!sopText) {
-      toast.error("No SOP text provided");
-      return;
-    }
-    
+  // Update prompt when SOP text changes
+  React.useEffect(() => {
+    setPrompt(`You are a quiz generator assistant for corporate training.
+
+Based on the following internal policy document, create 5 multiple-choice questions (MCQs) with 4 options each (A–D) and clearly mark the correct answer.
+
+Keep the language simple and professional. Focus on key information relevant to employees.
+
+Here is the policy text:
+${sopText.substring(0, 3000)}${sopText.length > 3000 ? '...' : ''}`);
+  }, [sopText]);
+
+  const generateQuestionsWithMockData = async () => {
+    // This is a fallback if the user doesn't provide an API key
     setIsGenerating(true);
     
     try {
       // Simulate AI generating questions
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // In a real app, this would call an actual AI API (e.g., OpenAI)
-      // For demo purposes, we generate mock questions
+      // For demo purposes, we generate mock questions based on the SOPText title if present
+      const sopTitle = sopText.split('\n')[0] || "Company Policy";
       const mockQuestions = `
-Question 1: What is the maximum number of annual leave days that can be carried forward to the next calendar year?
-A) 3 days
-B) 5 days
-C) 10 days
-D) 20 days
+Question 1: What is the main purpose of ${sopTitle}?
+A) To provide technical specifications
+B) To outline policy guidelines
+C) To analyze market conditions
+D) To document legal requirements
 Correct Answer: B
 
-Question 2: How many days of paid sick leave do full-time employees receive per year?
-A) 5 days
-B) 10 days
-C) 15 days
-D) 20 days
-Correct Answer: B
-
-Question 3: How much advance notice is required for standard leave requests?
-A) 1 week
-B) 2 weeks
-C) 3 weeks
-D) 4 weeks
-Correct Answer: B
-
-Question 4: Who is responsible for ensuring adequate coverage during employee absence?
+Question 2: Who is responsible for ensuring compliance with the ${sopTitle.includes('Policy') ? sopTitle : sopTitle + ' Policy'}?
 A) HR Department
-B) The employee taking leave
+B) Individual employees
 C) Managers
 D) Department heads
 Correct Answer: C
 
-Question 5: How long is the paid leave period for a primary caregiver under Parental Leave?
-A) 6 weeks
-B) 8 weeks
-C) 10 weeks
-D) 12 weeks
-Correct Answer: D
+Question 3: How often should the ${sopTitle.includes('Policy') ? sopTitle : sopTitle + ' Policy'} be reviewed?
+A) Monthly
+B) Quarterly
+C) Yearly
+D) Every two years
+Correct Answer: C
+
+Question 4: What happens if an employee violates the ${sopTitle.includes('Policy') ? sopTitle : sopTitle + ' Policy'}?
+A) Immediate termination
+B) Verbal warning only
+C) Disciplinary action based on severity
+D) No consequences
+Correct Answer: C
+
+Question 5: Which department should be contacted for questions regarding the ${sopTitle.includes('Policy') ? sopTitle : sopTitle + ' Policy'}?
+A) Marketing
+B) Human Resources
+C) Legal
+D) IT Support
+Correct Answer: B
       `;
       
       setGeneratedQuestions(mockQuestions);
@@ -91,6 +102,79 @@ Correct Answer: D
     }
   };
 
+  const generateQuestionsWithOpenAI = async () => {
+    if (!apiKey) {
+      toast.error("Please enter your OpenAI API key");
+      setShowApiInput(true);
+      return;
+    }
+    
+    setIsGenerating(true);
+    
+    try {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: "You are a helpful assistant that generates quiz questions based on provided content."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1000
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error?.message || "Failed to generate questions");
+      }
+      
+      const data = await response.json();
+      const generatedContent = data.choices[0].message.content;
+      
+      setGeneratedQuestions(generatedContent);
+      
+      // Parse the questions into a structured format
+      const questions = parseQuestions(generatedContent);
+      onQuestionsGenerated(questions);
+      
+      toast.success("Questions generated successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to generate questions: ${error.message}`);
+      console.error("OpenAI error:", error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateQuestions = async () => {
+    if (!sopText) {
+      toast.error("No SOP text provided");
+      return;
+    }
+    
+    if (apiKey) {
+      await generateQuestionsWithOpenAI();
+    } else {
+      if (showApiInput) {
+        toast.error("Please enter your OpenAI API key or use the mock generator");
+      } else {
+        await generateQuestionsWithMockData();
+      }
+    }
+  };
+
   const parseQuestions = (questionsText: string): any[] => {
     const lines = questionsText.trim().split('\n');
     const questions: any[] = [];
@@ -100,7 +184,7 @@ Correct Answer: D
     
     for (const line of lines) {
       // Start of a new question
-      if (line.startsWith('Question')) {
+      if (line.trim().match(/^Question\s*\d+:/) || line.trim().match(/^\d+\.\s*[A-Z]/)) {
         // Save previous question if it exists
         if (currentQuestion) {
           questions.push({
@@ -118,15 +202,26 @@ Correct Answer: D
         };
         currentOptions = [];
       }
-      // Option line
-      else if (line.match(/^[A-D]\)/)) {
-        const option = line.substring(3).trim();
+      // Option line - matches A), a), A., a. or just A
+      else if (line.trim().match(/^[A-D][).:]?\s+/) || line.trim().match(/^[a-d][).:]?\s+/)) {
+        const option = line.trim().substring(line.trim().indexOf(' ') + 1).trim();
         currentOptions.push(option);
       }
       // Correct answer line
-      else if (line.startsWith('Correct Answer:')) {
-        const correctAnswerLetter = line.substring(line.length - 1);
-        const correctAnswerIndex = correctAnswerLetter.charCodeAt(0) - 'A'.charCodeAt(0);
+      else if (line.trim().toLowerCase().startsWith('correct answer:') || 
+               line.trim().toLowerCase().startsWith('answer:')) {
+        const answerText = line.substring(line.indexOf(':') + 1).trim();
+        let correctAnswerIndex = 0;
+        
+        // Parse the correct answer letter
+        if (answerText.match(/^[A-Da-d]/)) {
+          const letter = answerText.charAt(0).toUpperCase();
+          correctAnswerIndex = letter.charCodeAt(0) - 'A'.charCodeAt(0);
+        } else if (answerText.includes('A')) correctAnswerIndex = 0;
+        else if (answerText.includes('B')) correctAnswerIndex = 1;
+        else if (answerText.includes('C')) correctAnswerIndex = 2;
+        else if (answerText.includes('D')) correctAnswerIndex = 3;
+        
         currentQuestion.correctAnswer = correctAnswerIndex;
       }
     }
@@ -168,23 +263,62 @@ Correct Answer: D
           />
         </div>
         
-        <Button
-          onClick={handleGenerateQuestions}
-          disabled={isGenerating || !sopText}
-          className="w-full"
-        >
-          {isGenerating ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Generating Questions...
-            </>
-          ) : (
-            <>
-              <Brain className="mr-2 h-4 w-4" />
-              Generate Questions
-            </>
+        {showApiInput && (
+          <div className="space-y-2">
+            <label className="text-sm font-medium">
+              OpenAI API Key (optional, but recommended for better results):
+            </label>
+            <div className="flex space-x-2">
+              <input
+                type="password"
+                className="flex-1 px-3 py-2 border rounded-md"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder="sk-..."
+              />
+              <Button 
+                variant="secondary"
+                onClick={() => setShowApiInput(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500">
+              Your API key is used only for this request and is not stored.
+            </p>
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            onClick={handleGenerateQuestions}
+            disabled={isGenerating || !sopText}
+            className="flex-1"
+          >
+            {isGenerating ? (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                Generating Questions...
+              </>
+            ) : (
+              <>
+                <Brain className="mr-2 h-4 w-4" />
+                Generate Questions
+              </>
+            )}
+          </Button>
+          
+          {!showApiInput && (
+            <Button
+              variant="outline"
+              onClick={() => setShowApiInput(true)}
+              className="flex-1"
+              disabled={isGenerating}
+            >
+              Use OpenAI API
+            </Button>
           )}
-        </Button>
+        </div>
         
         {generatedQuestions && (
           <div className="mt-4">
