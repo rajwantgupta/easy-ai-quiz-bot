@@ -7,6 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { toast } from "sonner";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -53,8 +55,15 @@ const Register = () => {
     try {
       const success = await register(name, email, password, username, phone, organization);
       if (success) {
+        toast.success("Registration successful! Redirecting to dashboard...");
         navigate("/dashboard");
+      } else {
+        // This will handle the case where register returns false
+        toast.error("Registration failed. Please try again.");
       }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("An error occurred during registration.");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,7 +174,9 @@ const Register = () => {
                     <p className="text-sm text-red-500">{passwordError}</p>
                   )}
                 </div>
-                
+              </CardContent>
+              
+              <CardFooter>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
@@ -176,15 +187,15 @@ const Register = () => {
                     "Sign Up"
                   )}
                 </Button>
-
-                <div className="text-center text-sm">
-                  Already have an account?{" "}
-                  <Link to="/login" className="text-primary hover:underline">
-                    Log in
-                  </Link>
-                </div>
-              </form>
-            </CardContent>
+              </CardFooter>
+              
+              <div className="text-center text-sm pb-4">
+                Already have an account?{" "}
+                <Link to="/login" className="text-primary hover:underline">
+                  Log in
+                </Link>
+              </div>
+            </form>
           </Card>
         </div>
       </main>

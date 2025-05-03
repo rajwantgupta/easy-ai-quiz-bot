@@ -14,6 +14,12 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -54,6 +60,16 @@ const Login = () => {
     }
   };
 
+  const setDemoCredentials = (type: 'admin' | 'user') => {
+    if (type === 'admin') {
+      setEmail("admin@example.com");
+      setPassword("password");
+    } else {
+      setEmail("user@example.com");
+      setPassword("password");
+    }
+  };
+
   // If user is already logged in, show loading spinner while redirecting
   if (user) {
     return (
@@ -73,42 +89,79 @@ const Login = () => {
               Enter your credentials to access your account
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm text-blue-600 hover:underline"
-                  >
-                    Forgot password?
-                  </Link>
+          <CardContent className="space-y-4">
+            {/* Demo Credentials Box */}
+            <Alert className="bg-blue-50 border-blue-200">
+              <InfoIcon className="h-4 w-4 text-blue-500" />
+              <AlertTitle className="text-blue-700">Demo Credentials</AlertTitle>
+              <AlertDescription className="text-sm">
+                <div className="space-y-2 mt-2">
+                  <div>
+                    <p className="font-semibold">Admin User:</p>
+                    <p>Email: admin@example.com</p>
+                    <p>Password: password</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-1 text-xs border-blue-300 text-blue-700"
+                      onClick={() => setDemoCredentials('admin')}
+                    >
+                      Use Admin Credentials
+                    </Button>
+                  </div>
+                  <div>
+                    <p className="font-semibold">Test User:</p>
+                    <p>Email: user@example.com</p>
+                    <p>Password: password</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-1 text-xs border-blue-300 text-blue-700"
+                      onClick={() => setDemoCredentials('user')}
+                    >
+                      Use Test User Credentials
+                    </Button>
+                  </div>
                 </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+              </AlertDescription>
+            </Alert>
+            
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
+              
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full mt-4"
                 disabled={loading}
               >
                 {loading ? (
@@ -120,14 +173,15 @@ const Login = () => {
                   "Login"
                 )}
               </Button>
-              <div className="text-center text-sm">
-                Don't have an account?{" "}
-                <Link to="/register" className="text-blue-600 hover:underline">
-                  Register
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
+            </form>
+            
+            <div className="text-center text-sm">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-primary hover:underline">
+                Register
+              </Link>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

@@ -129,6 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return false;
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast.error("Login failed");
       return false;
     } finally {
@@ -144,8 +145,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     phone?: string, 
     organization?: string
   ): Promise<boolean> => {
+    console.log("Registration attempt:", { name, email, username });
     setIsLoading(true);
+    
     try {
+      // Validate inputs
+      if (!name || !email || !password || !username) {
+        toast.error("All required fields must be filled");
+        return false;
+      }
+      
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -159,10 +168,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const registeredUsers = getRegisteredUsers();
       
       const usernameTaken = Object.values(registeredUsers).some(
-        ({ user }) => user.username === username
+        ({ user }) => user.username?.toLowerCase() === username.toLowerCase()
       );
       
-      if (username === "admin" || username === "testuser" || usernameTaken) {
+      if (username.toLowerCase() === "admin" || username.toLowerCase() === "testuser" || usernameTaken) {
         toast.error("Username already taken");
         return false;
       }
@@ -192,12 +201,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         password: password
       });
       
+      console.log("User registered:", userData);
+      
       // Log the user in
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
       toast.success("Registration successful");
       return true;
     } catch (error) {
+      console.error("Registration error:", error);
       toast.error("Registration failed");
       return false;
     } finally {
